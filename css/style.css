@@ -160,6 +160,14 @@ input.code{text-align:center;letter-spacing:8px;font:800 28px var(--serif);text-
 #toasts{position:fixed;top:max(10px,env(safe-area-inset-top));left:0;right:0;z-index:40;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 .toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:700;box-shadow:var(--shadow);animation:drop .4s cubic-bezier(.2,1.3,.4,1);max-width:90vw}
 @keyframes drop{from{transform:translateY(-30px);opacity:0}}
+/* bannière de mise à jour + version discrète */
+#update{position:fixed;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));z-index:25;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+.upd{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--bg);border-radius:16px;padding:10px 10px 10px 14px;box-shadow:var(--shadow);max-width:520px;font-weight:700;font-size:14px;animation:drop .4s cubic-bezier(.2,1.3,.4,1)}
+.upd span{flex:1}
+.upd .go{background:var(--a);color:#fff;border-radius:10px;padding:8px 12px;font-weight:800}
+.upd .x{padding:6px 8px;opacity:.7}
+body:has(.upd) .app{padding-bottom:96px}
+.ver{font-size:11px;color:var(--mut);opacity:.75;margin:4px 0 0;text-align:center}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
 
 /* carnet */

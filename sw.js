@@ -1,15 +1,19 @@
-/* Service worker : met le jeu en cache pour qu'il fonctionne sans connexion. */
-const VERSION = 'motamot-v2';
+/* Service worker : met le jeu en cache pour qu'il fonctionne sans connexion.
+   Une nouvelle version s'installe en arrière-plan puis attend que le joueur accepte la mise à jour. */
+importScripts('js/version.js');
+const VERSION = 'motamot-' + APP_VERSION;
 const CORE = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/words.js', 'js/engine.js', 'js/store.js', 'js/learn.js', 'js/fx.js', 'js/online.js', 'js/app.js',
+  'js/version.js', 'js/words.js', 'js/engine.js', 'js/store.js', 'js/learn.js', 'js/fx.js', 'js/online.js', 'js/app.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 const PEER = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  // cache:'reload' : on récupère les fichiers frais, pas ceux du cache HTTP du navigateur
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all(CORE.map(u => c.add(new Request(u, { cache: 'reload' }))))));
 });
+self.addEventListener('message', e => { if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });

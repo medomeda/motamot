@@ -133,7 +133,8 @@ function viewHome() {
     <button class="btn" data-act="how">❓ Aide</button>
   </div>
   ${installEvt ? '<button class="btn teal" style="margin-top:10px" data-act="install">📲 Installer l’application</button>' : ''}
-  <p class="center" style="margin-top:14px"><span class="net ${on ? '' : 'off'}"><i></i>${on ? 'En ligne' : 'Hors ligne · tout fonctionne sauf le duel en ligne'}</span></p>`;
+  <p class="center" style="margin-top:14px"><span class="net ${on ? '' : 'off'}"><i></i>${on ? 'En ligne' : 'Hors ligne · tout fonctionne sauf le duel en ligne'}</span></p>
+  <p class="ver">Version ${APP_VERSION}</p>`;
 }
 
 /* ---------- Parcours ---------- */
@@ -562,6 +563,7 @@ function viewSettings() {
   </div>
   <div class="card"><h3>Hors ligne</h3><p class="small">Une fois chargé, le jeu fonctionne sans connexion : parcours, défi du jour, duel contre l’ordinateur et à deux. Seuls le duel en ligne et les définitions de certains mots demandent internet.</p>
   <p class="small">Le dictionnaire est affiché sans accents (CAFE pour « café »).</p></div>
+  <div class="card"><div class="set"><div>Version ${APP_VERSION}<small>Le jeu te prévient quand une nouvelle version est disponible.</small></div><button class="btn" style="width:auto;padding:10px 14px" data-act="checkupdate">Vérifier</button></div></div>
   <button class="btn" data-act="resetask" style="color:var(--bad)">Effacer ma progression</button>`;
 }
 function howHtml() {
@@ -677,6 +679,13 @@ const ACT = {
     if (a === 'music') Sfx.music(Store.d.music);
     render();
   },
+  checkupdate() { checkForUpdate(true); },
+  doupdate() {
+    if (G && !G.over && (screen === 'solo' || screen === 'duel')) ask('Mettre à jour maintenant ?', 'doupdateyes', '', 'Mettre à jour');
+    else applyUpdate();
+  },
+  doupdateyes() { closeModal(); applyUpdate(); },
+  hideupdate() { $('#update').innerHTML = ''; },
   resetask() { ask('Effacer toute ta progression ?', 'resetyes', '', 'Effacer'); },
   resetyes() { Store.reset(); closeModal(); toast('Progression effacée'); go('home'); },
 };
@@ -707,6 +716,41 @@ window.addEventListener('offline', () => { if (screen === 'home') render(); });
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (screen === 'home') render(); });
 window.addEventListener('appinstalled', () => { installEvt = null; toast('Application installée 🎉'); });
 
+/* ---------- Mises à jour ---------- */
+let swReg = null, waitingWorker = null, updating = false;
+function showUpdate(worker) {
+  waitingWorker = worker;
+  $('#update').innerHTML = `<div class="upd" role="alert"><span>🎉 Nouvelle version disponible</span><button class="go" data-act="doupdate">Mettre à jour</button><button class="x" data-act="hideupdate" aria-label="Plus tard">✕</button></div>`;
+}
+function applyUpdate() {
+  const w = waitingWorker || (swReg && swReg.waiting);
+  updating = true;
+  if (w) w.postMessage({ type: 'SKIP_WAITING' }); else location.reload();   // controllerchange recharge la page
+}
+async function checkForUpdate(manual) {
+  if (!swReg) { if (manual) toast('Mises à jour : disponibles une fois le jeu installé ou publié.'); return; }
+  try {
+    await swReg.update();
+    await sleep(manual ? 1500 : 0);
+    if (swReg.waiting && navigator.serviceWorker.controller) showUpdate(swReg.waiting);
+    else if (manual) toast(swReg.installing ? 'Nouvelle version en cours de téléchargement…' : 'Tu as la dernière version ✔');
+  } catch (e) { if (manual) toast('Impossible de vérifier (hors ligne ?)'); }
+}
+function setupServiceWorker() {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (updating) location.reload(); });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    swReg = reg;
+    if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) showUpdate(w); });
+    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    setInterval(() => reg.update().catch(() => {}), 3600e3);
+  }).catch(() => {});
+}
+
 /* ---------- Démarrage ---------- */
 (function boot() {
   const bg = document.querySelector('.bg');
@@ -716,5 +760,5 @@ window.addEventListener('appinstalled', () => { installEvt = null; toast('Applic
   render();
   const app = $('#app'); app.classList.add('x');
   if (!Store.d.seenHow) setTimeout(() => { if (screen === 'home') showModal(howHtml()); }, 500);
-  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  setupServiceWorker();
 })();

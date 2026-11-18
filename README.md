@@ -33,7 +33,8 @@ que lorsque le jeu est servi en `http://localhost` ou en `https://`.
 
 Déposer le dossier tel quel sur GitHub Pages, Netlify, Cloudflare Pages… (HTTPS fourni).
 Les joueurs peuvent alors **installer** l'application depuis leur navigateur (« Ajouter à l'écran d'accueil »)
-et y jouer sans connexion. Après une modification, incrémenter `VERSION` dans `sw.js` pour forcer la mise à jour.
+et y jouer sans connexion. À chaque publication, **changer `APP_VERSION` dans `js/version.js`** (seul endroit à modifier) : le numéro s'affiche dans le jeu
+(accueil et réglages) et les joueurs voient une bannière « Nouvelle version disponible » avec un bouton **Mettre à jour**.
 
 ## Organisation
 
