@@ -7,7 +7,7 @@ Jeu de chaînes de mots : on passe d'un mot à un autre en changeant **une lettr
 
 | Mode | Hors ligne ? | Description |
 |---|---|---|
-| **Parcours** | ✅ | 5 mondes, 30 niveaux, jusqu'à 3 ⭐ par niveau (indices, annulation) |
+| **Parcours** | ✅ | 5 mondes, 30 niveaux, jusqu'à 3 ⭐ par niveau (indices, annulation). Un niveau rejoué reçoit de nouveaux mots au hasard, pour ne pas apprendre les réponses par cœur |
 | **Défi du jour** | ✅ | Même défi pour tout le monde chaque jour, série de jours consécutifs |
 | **Défi libre** | ✅ | Départ/arrivée au hasard, longueur et distance au choix |
 | **Duel contre l'ordinateur** | ✅ | 3 niveaux (facile, moyen, difficile) |

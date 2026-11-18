@@ -43,6 +43,18 @@ function levelChallenge(i) {
   }
   return lvCache.get(i);
 }
+/** Niveau à jouer : la première fois, toujours le même (progression stable) ; dès qu'on le rejoue,
+ *  de nouveaux mots tirés au hasard, différents de la partie précédente, pour qu'on ne retienne pas par cœur. */
+function levelFor(i, avoid) {
+  if (!Store.d.levels[i] && !avoid) return levelChallenge(i);
+  const L = LEVELS[i];
+  let c = null;
+  for (let k = 0; k < 8; k++) {
+    c = Engine.challenge(L.len, L.steps, Math.random, PREF);
+    if (!c || !avoid || (c.start !== avoid.start && c.target !== avoid.target && c.start !== avoid.target && c.target !== avoid.start)) break;
+  }
+  return c || levelChallenge(i);
+}
 const unlocked = i => i === 0 || !!Store.d.levels[i - 1];
 function dailyChallenge(key) {
   const [y, m, d] = key.split('-').map(Number);
@@ -588,7 +600,7 @@ const ACT = {
   how() { showModal(howHtml()); },
   howok() { Store.d.seenHow = true; Store.save(); closeModal(); },
   install() { if (installEvt) { installEvt.prompt(); installEvt = null; render(); } },
-  level(a) { const i = +a; if (!unlocked(i)) return; startSolo({ type: 'level', i }, levelChallenge(i)); },
+  level(a) { const i = +a; if (!unlocked(i)) return; startSolo({ type: 'level', i }, levelFor(i)); },
   daily() { const key = dayKey(); startSolo({ type: 'daily', key }, dailyChallenge(key)); },
   fp(a) { setKV(FP, a); },
   free() { startSolo({ type: 'free' }, Engine.challenge(FP.len, FP.steps, Math.random, PREF)); },
@@ -610,8 +622,12 @@ const ACT = {
   },
   tomap() { closeModal(); G = null; go('map'); },
   tohome() { closeModal(); G = null; go('home'); },
-  nextlevel() { closeModal(); const i = G.src.i + 1; startSolo({ type: 'level', i }, levelChallenge(i)); },
-  replay() { closeModal(); startSolo(G.src, G.src.type === 'level' ? levelChallenge(G.src.i) : Engine.challenge(FP.len, FP.steps, Math.random, PREF)); },
+  nextlevel() { closeModal(); const i = G.src.i + 1; startSolo({ type: 'level', i }, levelFor(i)); },
+  replay() {
+    closeModal();
+    const prev = { start: G.start, target: G.target };
+    startSolo(G.src, G.src.type === 'level' ? levelFor(G.src.i, prev) : Engine.challenge(FP.len, FP.steps, Math.random, PREF));
+  },
   share() {
     const r = G.result, text = `Mot à mot · ${G.src.key}\n${U(G.start)} → ${U(G.target)}\n${'⭐'.repeat(r.stars)} en ${r.moves} coups (idéal : ${G.opt})`;
     if (navigator.share) navigator.share({ text }).catch(() => {});

@@ -1,5 +1,5 @@
 /* Service worker : met le jeu en cache pour qu'il fonctionne sans connexion. */
-const VERSION = 'motamot-v1';
+const VERSION = 'motamot-v2';
 const CORE = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/words.js', 'js/engine.js', 'js/store.js', 'js/learn.js', 'js/fx.js', 'js/online.js', 'js/app.js',
